@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.core.app.NotificationCompat.getColor
 import androidx.core.content.ContextCompat
@@ -25,6 +27,8 @@ class GenerateBarcodeFragment : Fragment() {
 
     private lateinit var viewModel: GenerateBarcodeViewModel
     private lateinit var binding: FragmentGenerateBarcodeBinding
+    private lateinit var valueEd: String
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,7 +39,7 @@ class GenerateBarcodeFragment : Fragment() {
                 inflater,
                 R.layout.fragment_generate_barcode, container, false
             )
-        displayBitmap("9781555189109")
+
 
         return binding.root
     }
@@ -46,6 +50,14 @@ class GenerateBarcodeFragment : Fragment() {
 
         Log.e("TAG","GenerateBarcodeFragment")
         // TODO: Use the ViewModel
+        // set on-click listener
+        binding.buttonGenerateBarcode.setOnClickListener {
+            // your code to perform when the user clicks on the button
+            valueEd=binding.editTextBarcodeNumber.text.toString()
+
+            displayBitmap(valueEd)
+
+        }
 
 
     }
@@ -62,7 +74,7 @@ class GenerateBarcodeFragment : Fragment() {
                 heightPixels = heightPixels
             )
         )
-        binding.textBarcodeNumber.text = value
+        binding.editTextBarcodeNumber.getText().clear()
     }
 
     private fun createBarcodeBitmap(
@@ -104,4 +116,8 @@ class GenerateBarcodeFragment : Fragment() {
         )
         return bitmap
     }
+
+
 }
+
+

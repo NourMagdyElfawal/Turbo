@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.core.app.NotificationCompat.getColor
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import com.example.turbo.R
@@ -25,6 +26,7 @@ class GenerateBarcodeFragment : Fragment() {
         fun newInstance() = GenerateBarcodeFragment()
     }
 
+    private var barcodeNumber: String=""
     private lateinit var viewModel: GenerateBarcodeViewModel
     private lateinit var binding: FragmentGenerateBarcodeBinding
     private lateinit var valueEd: String
@@ -74,7 +76,13 @@ class GenerateBarcodeFragment : Fragment() {
                 heightPixels = heightPixels
             )
         )
-        binding.editTextBarcodeNumber.getText().clear()
+        barcodeNumber=binding.editTextBarcodeNumber.getText().toString()
+        if (barcodeNumber.isNotEmpty()) {
+            binding.textViewBarcodeNumber.setText(barcodeNumber)
+            binding.editTextBarcodeNumber.visibility = View.GONE
+            binding.buttonGenerateBarcode.visibility = View.GONE
+            binding.buttonPrint.visibility = View.VISIBLE
+        }
     }
 
     private fun createBarcodeBitmap(

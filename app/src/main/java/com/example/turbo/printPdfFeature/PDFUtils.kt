@@ -24,7 +24,7 @@ object PDFUtils {
     }
 
     @Throws(DocumentException::class)
-    private fun addLineSpace(document: Document) {
+     fun addLineSpace(document: Document) {
         document.add(Paragraph(""))
 
     }

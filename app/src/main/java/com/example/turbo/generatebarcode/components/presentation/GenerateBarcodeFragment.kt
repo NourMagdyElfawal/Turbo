@@ -1,35 +1,88 @@
 package com.example.turbo.generatebarcode.components.presentation
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.print.PrintAttributes
+import android.print.PrintManager
+import android.provider.Settings
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.ColorInt
-import androidx.core.app.NotificationCompat.getColor
-import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.turbo.R
 import com.example.turbo.databinding.FragmentGenerateBarcodeBinding
+import com.example.turbo.generatebarcode.components.presentation.model.ItemModel
+import com.example.turbo.printPdfFeature.PDFUtils
+import com.example.turbo.printPdfFeature.PdfDocumentAdapter
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.oned.Code128Writer
+import com.itextpdf.text.*
+import com.itextpdf.text.pdf.BaseFont
+import com.itextpdf.text.pdf.PdfWriter
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import java.io.*
+
 
 class GenerateBarcodeFragment : Fragment() {
 
     companion object {
         fun newInstance() = GenerateBarcodeFragment()
-    }
 
+        private val FILE_PRINT: String="PDFprint.pdf"
+        fun getBitmapImage(model: ItemModel,document: Document)
+        :Observable<ItemModel>{
+            return Observable.fromCallable {
+                val image=Image.getInstance(bitmapToBytArray(model.itemImageBarcodeBitmap))
+                image.scaleAbsolute(300f,100f)
+                document.add(image)
+                model
+            }
+        }
+
+        private fun bitmapToBytArray(bitmap: Bitmap?): ByteArray {
+            val stream=ByteArrayOutputStream()
+            bitmap!!.compress(Bitmap.CompressFormat.PNG,100,stream)
+            return stream.toByteArray()
+        }
+    }
+    val model=ItemModel()
     private var barcodeNumber: String=""
     private lateinit var viewModel: GenerateBarcodeViewModel
     private lateinit var binding: FragmentGenerateBarcodeBinding
     private lateinit var valueEd: String
+    var itemModelList=ArrayList<ItemModel>()
+    private val appPath:String
+        private get(){
+            val extStorageDirectory = Environment.getExternalStorageDirectory().toString()
+            val dir = File(extStorageDirectory)
+            if (!dir.exists())
+                dir.mkdirs()
+            val file: File
+            file = File(extStorageDirectory, "/TestFolder")
+
+            if (file.exists()) {
+                file.delete()
+                file.createNewFile()
+                Log.e("TAG","exists")
+            } else {
+                file.createNewFile()
+                Log.e("TAG","NotExist")
+
+            }
+            return dir.path+File.separator
+        }
 
 
     override fun onCreateView(
@@ -63,26 +116,175 @@ class GenerateBarcodeFragment : Fragment() {
 
 
     }
+
+    private fun createPDFFile(path: String) {
+        if(File(path).exists()){
+            File(path).delete()
+        }
+        try {
+
+            val document=Document()
+            //save
+            PdfWriter.getInstance(document, FileOutputStream(path))
+
+            //open
+            document.open()
+
+            //setting
+//            document.pageSize=PageSize.A4
+//            document.addCreationDate()
+            document.addAuthor("Nour")
+//            document.addCreator("kk")
+
+            //font setting
+            val colorAccent=BaseColor(0,153,204,255)
+            val fontSize=20.0f
+
+            //custom font
+            val fontName=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
+
+//            create title of document
+            val titleFont=Font(fontName,36.0f,Font.NORMAL,BaseColor.BLACK)
+//            PDFUtils.addNewItem(document,model.itemScannedBarcode.toString(),Element.ALIGN_CENTER,titleFont)
+
+//            //add more
+//            PDFUtils.addLinesSeparator(document)
+//            PDFUtils.addNewItem(document,"Detail",Element.ALIGN_CENTER,titleFont)
+//            PDFUtils.addLinesSeparator(document)
+
+            //use RXjava to fetch image and add to PDF
+            Observable.fromIterable(itemModelList)
+                .flatMap {model:ItemModel->getBitmapImage(model,document)}
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { model:ItemModel->
+                    //onNext
+                        Log.e("TAG","onNext")
+                        PDFUtils.addNewItemWithLeftAndRight(document,model.itemScannedBarcode!!,"",titleFont,titleFont)
+                        PDFUtils.addLinesSeparator(document)
+                        PDFUtils.addNewItem(document,model.itemStore!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addLinesSeparator(document)
+                        PDFUtils.addNewItemWithLeftAndRight(document,model.itemCity!!,"",titleFont,titleFont)
+                        PDFUtils.addLinesSeparator(document)
+                        PDFUtils.addNewItem(document,model.itemUOM!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addLinesSeparator(document)
+                        PDFUtils.addNewItem(document,model.itemScannedQR_Code!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addLinesSeparator(document)
+
+                    },
+                    {
+                    t:Throwable? ->
+                //on Error
+                        Log.e("TAG","Error")
+
+                        Toast.makeText(context,t!!.message,Toast.LENGTH_SHORT).show()
+
+                    },{
+                //on Complet
+                PDFUtils.addLineSpace(document)
+                //close
+                document.close()
+                Toast.makeText(context,"Success!",Toast.LENGTH_SHORT).show()
+                printPDF()
+            })
+        }catch (e:FileNotFoundException){
+            e.printStackTrace()
+        }catch (e:IOException){
+            e.printStackTrace()
+        }catch (e:DocumentException){
+            e.printStackTrace()
+        }finally {
+
+        }
+    }
+
+    private fun printPDF() {
+        val printManager= requireContext().getSystemService(Context.PRINT_SERVICE) as PrintManager
+        try {
+            val printDocumentAdapter=PdfDocumentAdapter(java.lang.StringBuilder(appPath).append(
+                FILE_PRINT).toString(), FILE_PRINT)
+            printManager.print("Document",printDocumentAdapter,
+            PrintAttributes.Builder().build())
+        }catch (e:Exception)
+        {
+            e.printStackTrace()
+        }
+    }
+
+    private fun initModel(bitmap: Bitmap, barcodeNumber: String) {
+        Log.e("TAG",bitmap.toString())
+        Log.e("TAG",barcodeNumber)
+
+        model.itemScannedBarcode= barcodeNumber
+        model.itemImageBarcodeBitmap= bitmap
+        model.itemStore="ياندا ستور"
+        model.itemCity="القاهره"
+        model.itemUOM="شبرا الخيمة"
+        model.itemScannedQR_Code="01128717755"
+        itemModelList.add(model)
+
+    }
+
+
     private fun displayBitmap(value: String) {
         val widthPixels = resources.getDimensionPixelSize(R.dimen.width_barcode)
         val heightPixels = resources.getDimensionPixelSize(R.dimen.height_barcode)
-
-        binding.imageBarcode.setImageBitmap(
-            createBarcodeBitmap(
-                barcodeValue = value,
-                barcodeColor = resources.getColor(android.R.color.holo_blue_bright),
-                backgroundColor = resources.getColor(android.R.color.white),
-                widthPixels = widthPixels,
-                heightPixels = heightPixels
-            )
+        val bitmap = createBarcodeBitmap(
+            barcodeValue = value,
+            barcodeColor = resources.getColor(android.R.color.holo_blue_bright),
+            backgroundColor = resources.getColor(android.R.color.white),
+            widthPixels = widthPixels,
+            heightPixels = heightPixels
         )
+
+        binding.imageBarcode.setImageBitmap(bitmap)
         barcodeNumber=binding.editTextBarcodeNumber.getText().toString()
         if (barcodeNumber.isNotEmpty()) {
             binding.textViewBarcodeNumber.setText(barcodeNumber)
             binding.editTextBarcodeNumber.visibility = View.GONE
             binding.buttonGenerateBarcode.visibility = View.GONE
             binding.buttonPrint.visibility = View.VISIBLE
+
+//                Dexter.withActivity(activity)
+//                    .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                    .withListener(object:PermissionListener{
+//                        override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+                            binding.buttonPrint.setOnClickListener {
+                                askForPermissions()
+                            }
+//                        }
+//
+//                        override fun onPermissionDenied(response: PermissionDeniedResponse?) {
+//                            Toast.makeText(context,"please enable this permission",
+//                                Toast.LENGTH_SHORT).show()
+//                        }
+//
+//                        override fun onPermissionRationaleShouldBeShown(
+//                            permission: PermissionRequest?,
+//                            token: PermissionToken?
+//                        ) {
+//                            TODO("Not yet implemented")
+//                        }
+//
+//                    })
+//                    .check()
+
+
         }
+        initModel(bitmap,barcodeNumber)
+    }
+
+    private fun askForPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivity(intent)
+                return
+            }
+            createPDFFile(StringBuilder(appPath).append(FILE_PRINT).toString())
+        }
+
     }
 
     private fun createBarcodeBitmap(
@@ -108,7 +310,7 @@ class GenerateBarcodeFragment : Fragment() {
             }
         }
 
-        val bitmap = Bitmap.createBitmap(
+         val bitmap = Bitmap.createBitmap(
             bitMatrix.width,
             bitMatrix.height,
             Bitmap.Config.ARGB_8888
@@ -122,6 +324,8 @@ class GenerateBarcodeFragment : Fragment() {
             bitMatrix.width,
             bitMatrix.height
         )
+
+
         return bitmap
     }
 

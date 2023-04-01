@@ -1,6 +1,5 @@
 package com.example.turbo.generatebarcode.components.presentation
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -10,15 +9,19 @@ import android.os.Environment
 import android.print.PrintAttributes
 import android.print.PrintManager
 import android.provider.Settings
+import android.text.Layout.Alignment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.load.resource.bitmap.CenterInside
 import com.example.turbo.R
 import com.example.turbo.databinding.FragmentGenerateBarcodeBinding
 import com.example.turbo.generatebarcode.components.presentation.model.ItemModel
@@ -28,6 +31,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.oned.Code128Writer
 import com.itextpdf.text.*
 import com.itextpdf.text.pdf.BaseFont
+import com.itextpdf.text.pdf.PdfPCell
+import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -45,7 +50,8 @@ class GenerateBarcodeFragment : Fragment() {
         :Observable<ItemModel>{
             return Observable.fromCallable {
                 val image=Image.getInstance(bitmapToBytArray(model.itemImageBarcodeBitmap))
-                image.scaleAbsolute(300f,100f)
+                image.scaleAbsolute(400f,100f)
+                image.alignment=Image.ALIGN_CENTER
                 document.add(image)
                 model
             }
@@ -125,7 +131,7 @@ class GenerateBarcodeFragment : Fragment() {
 
             val document=Document()
             //save
-            PdfWriter.getInstance(document, FileOutputStream(path))
+          val writer =PdfWriter.getInstance(document, FileOutputStream(path))
 
             //open
             document.open()
@@ -141,16 +147,12 @@ class GenerateBarcodeFragment : Fragment() {
             val fontSize=20.0f
 
             //custom font
-            val fontName=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
+            val font=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
+            val fontArabic=BaseFont.createFont("assets/fonts/NotoNaskhArabic-Regular.ttf",BaseFont.IDENTITY_H,BaseFont.EMBEDDED)
 
 //            create title of document
-            val titleFont=Font(fontName,36.0f,Font.NORMAL,BaseColor.BLACK)
-//            PDFUtils.addNewItem(document,model.itemScannedBarcode.toString(),Element.ALIGN_CENTER,titleFont)
-
-//            //add more
-//            PDFUtils.addLinesSeparator(document)
-//            PDFUtils.addNewItem(document,"Detail",Element.ALIGN_CENTER,titleFont)
-//            PDFUtils.addLinesSeparator(document)
+            val titleFont=Font(font,36.0f,Font.NORMAL,BaseColor.BLACK)
+            val titleFontArabic=Font(fontArabic,36.0f,Font.NORMAL,BaseColor.BLACK)
 
             //use RXjava to fetch image and add to PDF
             Observable.fromIterable(itemModelList)
@@ -161,15 +163,16 @@ class GenerateBarcodeFragment : Fragment() {
                     { model:ItemModel->
                     //onNext
                         Log.e("TAG","onNext")
-                        PDFUtils.addNewItemWithLeftAndRight(document,model.itemScannedBarcode!!,"",titleFont,titleFont)
                         PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItem(document,model.itemStore!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addNewItem(document,model.itemScannedBarcode!!,Element.ALIGN_CENTER,titleFont)
                         PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItemWithLeftAndRight(document,model.itemCity!!,"",titleFont,titleFont)
+                        PDFUtils.addNewItemArabic(document,model.itemStore!!,titleFontArabic)
                         PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItem(document,model.itemUOM!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addNewItemArabic(document,model.itemCity!!,titleFontArabic)
                         PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItem(document,model.itemScannedQR_Code!!,Element.ALIGN_LEFT,titleFont)
+                        PDFUtils.addNewItemArabic(document,model.itemUOM!!,titleFontArabic)
+                        PDFUtils.addLinesSeparator(document)
+                        PDFUtils.addNewItemArabic(document,model.itemScannedQR_Code!!,titleFontArabic)
                         PDFUtils.addLinesSeparator(document)
 
                     },

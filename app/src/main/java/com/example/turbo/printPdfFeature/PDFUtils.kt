@@ -1,6 +1,11 @@
 package com.example.turbo.printPdfFeature
 
+import android.view.View.TEXT_ALIGNMENT_CENTER
+import android.widget.TextView
 import com.itextpdf.text.*
+import com.itextpdf.text.pdf.PdfPCell
+import com.itextpdf.text.pdf.PdfPTable
+import com.itextpdf.text.pdf.PdfWriter
 import com.itextpdf.text.pdf.draw.LineSeparator
 import com.itextpdf.text.pdf.draw.VerticalPositionMark
 
@@ -38,6 +43,15 @@ object PDFUtils {
         p.add(Chunk(VerticalPositionMark()))
         p.add(chunkTextRight)
         document.add(p)
+    }
+    @Throws(DocumentException::class)
+    fun addNewItemArabic(document:Document,arabicText: String,titleFontArabic: Font){
+        val table = PdfPTable(1)
+        table.runDirection = PdfWriter.RUN_DIRECTION_RTL
+        val cell = PdfPCell(Paragraph(arabicText, titleFontArabic))
+        cell.setBorder(Rectangle.NO_BORDER)
+        table.addCell(cell)
+        document.add(table)
     }
 
 }

@@ -7,7 +7,7 @@ import com.example.turbo.generatebarcode.components.StateListener
 
 class GenerateBarcodeViewModel:ViewModel(
 ) {
-var itemScannedBarcode:String?=null
+var itemScannedBarcode:String?=""
 var itemImageBarcodeBitmap: Bitmap?=null
 
 var stateListener:StateListener?=null
@@ -16,12 +16,13 @@ var stateListener:StateListener?=null
 
 
     fun onGenerateBarcodeClick(view:View){
-        if (itemScannedBarcode!!.length<8){
-            stateListener!!.onFailure("please enter at least 8 digits")
+        if (isitemScannedBarcodeValid(itemScannedBarcode!!)){
+            stateListener!!.onSuccess()
             return
         }else{
+            stateListener!!.onFailure("please enter at least 8 digits")
 
-            stateListener!!.onSuccess()
+
         }
     }
 
@@ -34,4 +35,9 @@ var stateListener:StateListener?=null
 
         }
     }
+
+    private fun isitemScannedBarcodeValid(itemScannedBarcode: String): Boolean {
+        return itemScannedBarcode.length > 7
+    }
+
 }

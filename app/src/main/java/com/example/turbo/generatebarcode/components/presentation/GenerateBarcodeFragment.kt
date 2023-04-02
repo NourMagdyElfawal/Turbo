@@ -9,30 +9,28 @@ import android.os.Environment
 import android.print.PrintAttributes
 import android.print.PrintManager
 import android.provider.Settings
-import android.text.Layout.Alignment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.load.resource.bitmap.CenterInside
 import com.example.turbo.R
 import com.example.turbo.databinding.FragmentGenerateBarcodeBinding
+import com.example.turbo.generatebarcode.components.StateListener
 import com.example.turbo.generatebarcode.components.presentation.model.ItemModel
 import com.example.turbo.printPdfFeature.PDFUtils
 import com.example.turbo.printPdfFeature.PdfDocumentAdapter
+import com.example.turbo.utils.ViewUtils
+import com.example.turbo.utils.ViewUtils.show
+import com.example.turbo.utils.ViewUtils.toast
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.oned.Code128Writer
 import com.itextpdf.text.*
 import com.itextpdf.text.pdf.BaseFont
-import com.itextpdf.text.pdf.PdfPCell
-import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -40,7 +38,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.*
 
 
-class GenerateBarcodeFragment : Fragment() {
+class GenerateBarcodeFragment : Fragment(),StateListener {
 
     companion object {
         fun newInstance() = GenerateBarcodeFragment()
@@ -75,18 +73,6 @@ class GenerateBarcodeFragment : Fragment() {
             val dir = File(extStorageDirectory)
             if (!dir.exists())
                 dir.mkdirs()
-            val file: File
-            file = File(extStorageDirectory, "/TestFolder")
-
-            if (file.exists()) {
-                file.delete()
-                file.createNewFile()
-                Log.e("TAG","exists")
-            } else {
-                file.createNewFile()
-                Log.e("TAG","NotExist")
-
-            }
             return dir.path+File.separator
         }
 
@@ -101,6 +87,7 @@ class GenerateBarcodeFragment : Fragment() {
                 R.layout.fragment_generate_barcode, container, false
             )
 
+        binding.lifecycleOwner = viewLifecycleOwner
 
         return binding.root
     }
@@ -108,17 +95,10 @@ class GenerateBarcodeFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(GenerateBarcodeViewModel::class.java)
+        binding.viewModel=viewModel
+        viewModel.stateListener=this
 
-        Log.e("TAG","GenerateBarcodeFragment")
-        // TODO: Use the ViewModel
-        // set on-click listener
-        binding.buttonGenerateBarcode.setOnClickListener {
-            // your code to perform when the user clicks on the button
-            valueEd=binding.editTextBarcodeNumber.text.toString()
 
-            displayBitmap(valueEd)
-
-        }
 
 
     }
@@ -137,10 +117,10 @@ class GenerateBarcodeFragment : Fragment() {
             document.open()
 
             //setting
-//            document.pageSize=PageSize.A4
-//            document.addCreationDate()
+            document.pageSize=PageSize.A4
+            document.addCreationDate()
             document.addAuthor("Nour")
-//            document.addCreator("kk")
+            document.addCreator("turbo")
 
             //font setting
             val colorAccent=BaseColor(0,153,204,255)
@@ -179,16 +159,14 @@ class GenerateBarcodeFragment : Fragment() {
                     {
                     t:Throwable? ->
                 //on Error
-                        Log.e("TAG","Error")
-
-                        Toast.makeText(context,t!!.message,Toast.LENGTH_SHORT).show()
+                        toast(t!!.message.toString(),context)
 
                     },{
                 //on Complet
                 PDFUtils.addLineSpace(document)
                 //close
                 document.close()
-                Toast.makeText(context,"Success!",Toast.LENGTH_SHORT).show()
+                        toast("success",context)
                 printPDF()
             })
         }catch (e:FileNotFoundException){
@@ -249,30 +227,10 @@ class GenerateBarcodeFragment : Fragment() {
             binding.buttonGenerateBarcode.visibility = View.GONE
             binding.buttonPrint.visibility = View.VISIBLE
 
-//                Dexter.withActivity(activity)
-//                    .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                    .withListener(object:PermissionListener{
-//                        override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+
                             binding.buttonPrint.setOnClickListener {
                                 askForPermissions()
                             }
-//                        }
-//
-//                        override fun onPermissionDenied(response: PermissionDeniedResponse?) {
-//                            Toast.makeText(context,"please enable this permission",
-//                                Toast.LENGTH_SHORT).show()
-//                        }
-//
-//                        override fun onPermissionRationaleShouldBeShown(
-//                            permission: PermissionRequest?,
-//                            token: PermissionToken?
-//                        ) {
-//                            TODO("Not yet implemented")
-//                        }
-//
-//                    })
-//                    .check()
-
 
         }
         initModel(bitmap,barcodeNumber)
@@ -330,6 +288,20 @@ class GenerateBarcodeFragment : Fragment() {
 
 
         return bitmap
+    }
+
+    override fun onStarted() {
+        binding.progressBar.show()
+    }
+
+    override fun onSuccess() {
+            valueEd=binding.editTextBarcodeNumber.text.toString()
+            displayBitmap(valueEd)
+
+    }
+
+    override fun onFailure(message: String) {
+        ViewUtils.toast(message, context)
     }
 
 

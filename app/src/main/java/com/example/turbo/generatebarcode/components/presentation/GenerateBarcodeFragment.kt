@@ -111,7 +111,7 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
 
             val document=Document()
             //save
-          val writer =PdfWriter.getInstance(document, FileOutputStream(path))
+          PdfWriter.getInstance(document, FileOutputStream(path))
 
             //open
             document.open()

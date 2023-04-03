@@ -63,37 +63,12 @@ class GenerateBarcodeFragment : Fragment(),StateListener{
     companion object {
         fun newInstance() = GenerateBarcodeFragment()
 
-        private val FILE_PRINT: String="PDFprint.pdf"
-        fun getBitmapImage(model: ItemModel,document: Document)
-        :Observable<ItemModel>{
-            return Observable.fromCallable {
-                val image=Image.getInstance(bitmapToBytArray(model.itemImageBarcodeBitmap))
-                image.scaleAbsolute(400f,100f)
-                image.alignment=Image.ALIGN_CENTER
-                document.add(image)
-                model
-            }
-        }
-
-        private fun bitmapToBytArray(bitmap: Bitmap?): ByteArray {
-            val stream=ByteArrayOutputStream()
-            bitmap!!.compress(Bitmap.CompressFormat.PNG,100,stream)
-            return stream.toByteArray()
-        }
     }
     val model=ItemModel()
     private var barcodeNumber: String=""
     private lateinit var binding: FragmentGenerateBarcodeBinding
     private lateinit var valueEd: String
     var itemModelList=ArrayList<ItemModel>()
-    private val appPath:String
-        private get(){
-            val extStorageDirectory = Environment.getExternalStorageDirectory().toString()
-            val dir = File(extStorageDirectory)
-            if (!dir.exists())
-                dir.mkdirs()
-            return dir.path+File.separator
-        }
 
 internal var printing:Printing?=null
     override fun onCreateView(
@@ -122,109 +97,16 @@ internal var printing:Printing?=null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-//        viewModel = ViewModelProvider(this).get(GenerateBarcodeViewModel::class.java)
         binding.viewModel=viewModel
         viewModel.stateListener=this
 
-//        initView()
         initListeners()
 
 
     }
 
-//    private fun createPDFFile(path: String) {
-//        if(File(path).exists()){
-//            File(path).delete()
-//        }
-//        try {
-//
-//            val document=Document()
-//            //save
-//          PdfWriter.getInstance(document, FileOutputStream(path))
-//
-//            //open
-//            document.open()
-//
-//            //setting
-//            document.pageSize=PageSize.A4
-//            document.addCreationDate()
-//            document.addAuthor("Nour")
-//            document.addCreator("turbo")
-//
-//            //font setting
-//            val colorAccent=BaseColor(0,153,204,255)
-//            val fontSize=20.0f
-//
-//            //custom font
-//            val font=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
-//            val fontArabic=BaseFont.createFont("assets/fonts/NotoNaskhArabic-Regular.ttf",BaseFont.IDENTITY_H,BaseFont.EMBEDDED)
-//
-////            create title of document
-//            val titleFont=Font(font,36.0f,Font.NORMAL,BaseColor.BLACK)
-//            val titleFontArabic=Font(fontArabic,36.0f,Font.NORMAL,BaseColor.BLACK)
-//
-//            //use RXjava to fetch image and add to PDF
-//            Observable.fromIterable(itemModelList)
-//                .flatMap {model:ItemModel->getBitmapImage(model,document)}
-//                .subscribeOn(Schedulers.computation())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                    { model:ItemModel->
-//                    //onNext
-//                        Log.e("TAG","onNext")
-//                        PDFUtils.addLinesSeparator(document)
-//                        PDFUtils.addNewItem(document,model.itemScannedBarcode!!,Element.ALIGN_CENTER,titleFont)
-//                        PDFUtils.addLinesSeparator(document)
-//                        PDFUtils.addNewItemArabic(document,model.itemStore!!,titleFontArabic)
-//                        PDFUtils.addLinesSeparator(document)
-//                        PDFUtils.addNewItemArabic(document,model.itemCity!!,titleFontArabic)
-//                        PDFUtils.addLinesSeparator(document)
-//                        PDFUtils.addNewItemArabic(document,model.itemUOM!!,titleFontArabic)
-//                        PDFUtils.addLinesSeparator(document)
-//                        PDFUtils.addNewItemArabic(document,model.itemScannedQR_Code!!,titleFontArabic)
-//                        PDFUtils.addLinesSeparator(document)
-//
-//                    },
-//                    {
-//                    t:Throwable? ->
-//                //on Error
-//                        toast(t!!.message.toString(),context)
-//
-//                    },{
-//                //on Complet
-//                PDFUtils.addLineSpace(document)
-//                //close
-//                document.close()
-//                        toast("success",context)
-//                //printPDF()
-//            })
-//        }catch (e:FileNotFoundException){
-//            e.printStackTrace()
-//        }catch (e:IOException){
-//            e.printStackTrace()
-//        }catch (e:DocumentException){
-//            e.printStackTrace()
-//        }finally {
-//
-//        }
-//    }
-
-//    private fun printPDF() {
-//        val printManager= requireContext().getSystemService(Context.PRINT_SERVICE) as PrintManager
-//        try {
-//            val printDocumentAdapter=PdfDocumentAdapter(java.lang.StringBuilder(appPath).append(
-//                FILE_PRINT).toString(), FILE_PRINT)
-//            printManager.print("Document",printDocumentAdapter,
-//            PrintAttributes.Builder().build())
-//        }catch (e:Exception)
-//        {
-//            e.printStackTrace()
-//        }
-//    }
 
     private fun initModel(bitmap: Bitmap, barcodeNumber: String) {
-        Log.e("TAG",bitmap.toString())
-        Log.e("TAG",barcodeNumber)
 
         model.itemScannedBarcode= barcodeNumber
         model.itemImageBarcodeBitmap= bitmap
@@ -237,7 +119,7 @@ internal var printing:Printing?=null
     }
 
 
-    @SuppressLint("SuspiciousIndentation")
+
     private fun displayBitmap(value: String) {
         val widthPixels = resources.getDimensionPixelSize(R.dimen.width_barcode)
         val heightPixels = resources.getDimensionPixelSize(R.dimen.height_barcode)
@@ -325,10 +207,14 @@ private fun getSomePrintables() = ArrayList<Printable>().apply {
 //                    .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
 //                    .build())
 
+    add(
+        ImagePrintable.Builder(model.itemImageBarcodeBitmap)
+            .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
+            .build())
 
     add(
         TextPrintable.Builder()
-            .setText("Printer")
+            .setText(barcodeNumber)
             .setLineSpacing(DefaultPrinter.LINE_SPACING_60)
             .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
             .setFontSize(DefaultPrinter.FONT_SIZE_LARGE)
@@ -340,71 +226,37 @@ private fun getSomePrintables() = ArrayList<Printable>().apply {
 
     add(
         TextPrintable.Builder()
-            .setText("TID: 1111123322" )
+            .setText("ياندا ستور" )
             .setCharacterCode(DefaultPrinter.CHARCODE_PC1252)
             .setNewLinesAfter(1)
             .build())
 
     add(
         TextPrintable.Builder()
-            .setText("RRN: : 234566dfgg4456")
+            .setText("القاهره")
             .setCharacterCode(DefaultPrinter.CHARCODE_PC1252)
             .setNewLinesAfter(1)
             .build())
 
     add(
         TextPrintable.Builder()
-            .setText("Amount: NGN$200,000")
+            .setText("شبرا الخيمة")
             .setCharacterCode(DefaultPrinter.CHARCODE_PC1252)
             .setNewLinesAfter(2)
             .build())
 
 
-    add(
-        TextPrintable.Builder()
-            .setText("APPROVED")
-            .setLineSpacing(DefaultPrinter.LINE_SPACING_60)
-            .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
-            .setFontSize(DefaultPrinter.FONT_SIZE_LARGE)
-            .setEmphasizedMode(DefaultPrinter.EMPHASIZED_MODE_BOLD)
-            .setUnderlined(DefaultPrinter.UNDERLINED_MODE_OFF)
-            .setNewLinesAfter(1)
-            .build())
 
 
-    add(
-        TextPrintable.Builder()
-            .setText("Transaction: Withdrawal")
-            .setCharacterCode(DefaultPrinter.CHARCODE_PC1252)
-            .setNewLinesAfter(1)
-            .build())
+//    val qr: Bitmap = QRCode.from("RRN: : 234566dfgg4456\nAmount: NGN\$200,000\n")
+//        .withSize(200, 200).bitmap()
+
+//    add(
+//        ImagePrintable.Builder(qr)
+//            .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
+//            .build())
 
 
-    val qr: Bitmap = QRCode.from("RRN: : 234566dfgg4456\nAmount: NGN\$200,000\n")
-        .withSize(200, 200).bitmap()
-
-    add(
-        ImagePrintable.Builder(qr)
-            .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
-            .build())
-
-
-    add(TextPrintable.Builder()
-        .setText("Hello World")
-        .setLineSpacing(DefaultPrinter.LINE_SPACING_60)
-        .setAlignment(DefaultPrinter.ALIGNMENT_CENTER)
-        .setEmphasizedMode(DefaultPrinter.EMPHASIZED_MODE_BOLD)
-        .setUnderlined(DefaultPrinter.UNDERLINED_MODE_ON)
-        .setNewLinesAfter(1)
-        .build())
-
-    add(TextPrintable.Builder()
-        .setText("Hello World")
-        .setAlignment(DefaultPrinter.ALIGNMENT_RIGHT)
-        .setEmphasizedMode(DefaultPrinter.EMPHASIZED_MODE_BOLD)
-        .setUnderlined(DefaultPrinter.UNDERLINED_MODE_ON)
-        .setNewLinesAfter(1)
-        .build())
 
     add(RawPrintable.Builder(byteArrayOf(27, 100, 4)).build())
 
@@ -420,20 +272,6 @@ var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActi
 }
 
 
-//}
-
-//        if(printing!=null){
-//            printing!!.printingCallback=this
-//        }
-//        if(Printooth.hasPairedPrinter()){
-//            Printooth.removeCurrentPrinter()
-//        }else{
-//
-//            startActivityForResult(Intent(context, ScanningActivity::class.java)
-//                , ScanningActivity.SCANNING_FOR_PRINTER)
-//
-//        }
-//    }
 
     private fun askForPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -449,15 +287,6 @@ var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActi
 
 
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//            if (!Environment.isExternalStorageManager()) {
-//                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-//                startActivity(intent)
-//                return
-//            }
-           // createPDFFile(StringBuilder(appPath).append(FILE_PRINT).toString())
-//        }
-//
     }
     private var requestBluetooth = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()) { result ->
@@ -548,7 +377,7 @@ var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActi
     }
 
     override fun onFailure(message: String) {
-        ViewUtils.toast(message, context)
+        toast(message, context)
     }
 }
 

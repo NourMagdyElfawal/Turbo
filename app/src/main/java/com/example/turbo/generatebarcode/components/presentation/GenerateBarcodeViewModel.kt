@@ -4,9 +4,18 @@ import android.graphics.Bitmap
 import android.view.View
 import androidx.lifecycle.ViewModel
 import com.example.turbo.generatebarcode.components.StateListener
+import com.example.turbotools.generate_barcode_feature.domain.repository.ItemRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class GenerateBarcodeViewModel:ViewModel(
+@HiltViewModel
+class GenerateBarcodeViewModel @Inject constructor(
+    private val repository: ItemRepository
+) :ViewModel(
 ) {
+
+
+val items=repository.getItems()
 var itemScannedBarcode:String?=""
 var itemImageBarcodeBitmap: Bitmap?=null
 

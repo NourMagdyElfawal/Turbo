@@ -11,7 +11,7 @@ interface ItemDao {
     fun getItems():Flow<List<Item>>
 
     @Query("SELECT * FROM item WHERE id = :id")
-     fun getItemById(id: Int):  Flow<Item>
+     fun getItemById(id: Int):  Item
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: Item)

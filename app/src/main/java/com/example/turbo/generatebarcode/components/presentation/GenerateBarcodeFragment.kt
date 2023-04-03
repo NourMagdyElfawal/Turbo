@@ -1,5 +1,6 @@
 package com.example.turbo.generatebarcode.components.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -17,6 +18,7 @@ import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import com.example.turbo.R
 import com.example.turbo.databinding.FragmentGenerateBarcodeBinding
@@ -32,13 +34,15 @@ import com.google.zxing.oned.Code128Writer
 import com.itextpdf.text.*
 import com.itextpdf.text.pdf.BaseFont
 import com.itextpdf.text.pdf.PdfWriter
+import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.*
 
-
+@AndroidEntryPoint
 class GenerateBarcodeFragment : Fragment(),StateListener {
+    private val viewModel by viewModels<GenerateBarcodeViewModel>()
 
     companion object {
         fun newInstance() = GenerateBarcodeFragment()
@@ -63,7 +67,6 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
     }
     val model=ItemModel()
     private var barcodeNumber: String=""
-    private lateinit var viewModel: GenerateBarcodeViewModel
     private lateinit var binding: FragmentGenerateBarcodeBinding
     private lateinit var valueEd: String
     var itemModelList=ArrayList<ItemModel>()
@@ -87,14 +90,14 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
                 R.layout.fragment_generate_barcode, container, false
             )
 
-        binding.lifecycleOwner = viewLifecycleOwner
+//        binding.lifecycleOwner = viewLifecycleOwner
 
         return binding.root
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(GenerateBarcodeViewModel::class.java)
+//        viewModel = ViewModelProvider(this).get(GenerateBarcodeViewModel::class.java)
         binding.viewModel=viewModel
         viewModel.stateListener=this
 
@@ -208,6 +211,7 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
     }
 
 
+    @SuppressLint("SuspiciousIndentation")
     private fun displayBitmap(value: String) {
         val widthPixels = resources.getDimensionPixelSize(R.dimen.width_barcode)
         val heightPixels = resources.getDimensionPixelSize(R.dimen.height_barcode)

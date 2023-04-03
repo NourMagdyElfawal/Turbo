@@ -90,7 +90,6 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
                 R.layout.fragment_generate_barcode, container, false
             )
 
-//        binding.lifecycleOwner = viewLifecycleOwner
 
         return binding.root
     }
@@ -106,95 +105,95 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
 
     }
 
-    private fun createPDFFile(path: String) {
-        if(File(path).exists()){
-            File(path).delete()
-        }
-        try {
+//    private fun createPDFFile(path: String) {
+//        if(File(path).exists()){
+//            File(path).delete()
+//        }
+//        try {
+//
+//            val document=Document()
+//            //save
+//          PdfWriter.getInstance(document, FileOutputStream(path))
+//
+//            //open
+//            document.open()
+//
+//            //setting
+//            document.pageSize=PageSize.A4
+//            document.addCreationDate()
+//            document.addAuthor("Nour")
+//            document.addCreator("turbo")
+//
+//            //font setting
+//            val colorAccent=BaseColor(0,153,204,255)
+//            val fontSize=20.0f
+//
+//            //custom font
+//            val font=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
+//            val fontArabic=BaseFont.createFont("assets/fonts/NotoNaskhArabic-Regular.ttf",BaseFont.IDENTITY_H,BaseFont.EMBEDDED)
+//
+////            create title of document
+//            val titleFont=Font(font,36.0f,Font.NORMAL,BaseColor.BLACK)
+//            val titleFontArabic=Font(fontArabic,36.0f,Font.NORMAL,BaseColor.BLACK)
+//
+//            //use RXjava to fetch image and add to PDF
+//            Observable.fromIterable(itemModelList)
+//                .flatMap {model:ItemModel->getBitmapImage(model,document)}
+//                .subscribeOn(Schedulers.computation())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    { model:ItemModel->
+//                    //onNext
+//                        Log.e("TAG","onNext")
+//                        PDFUtils.addLinesSeparator(document)
+//                        PDFUtils.addNewItem(document,model.itemScannedBarcode!!,Element.ALIGN_CENTER,titleFont)
+//                        PDFUtils.addLinesSeparator(document)
+//                        PDFUtils.addNewItemArabic(document,model.itemStore!!,titleFontArabic)
+//                        PDFUtils.addLinesSeparator(document)
+//                        PDFUtils.addNewItemArabic(document,model.itemCity!!,titleFontArabic)
+//                        PDFUtils.addLinesSeparator(document)
+//                        PDFUtils.addNewItemArabic(document,model.itemUOM!!,titleFontArabic)
+//                        PDFUtils.addLinesSeparator(document)
+//                        PDFUtils.addNewItemArabic(document,model.itemScannedQR_Code!!,titleFontArabic)
+//                        PDFUtils.addLinesSeparator(document)
+//
+//                    },
+//                    {
+//                    t:Throwable? ->
+//                //on Error
+//                        toast(t!!.message.toString(),context)
+//
+//                    },{
+//                //on Complet
+//                PDFUtils.addLineSpace(document)
+//                //close
+//                document.close()
+//                        toast("success",context)
+//                //printPDF()
+//            })
+//        }catch (e:FileNotFoundException){
+//            e.printStackTrace()
+//        }catch (e:IOException){
+//            e.printStackTrace()
+//        }catch (e:DocumentException){
+//            e.printStackTrace()
+//        }finally {
+//
+//        }
+//    }
 
-            val document=Document()
-            //save
-          PdfWriter.getInstance(document, FileOutputStream(path))
-
-            //open
-            document.open()
-
-            //setting
-            document.pageSize=PageSize.A4
-            document.addCreationDate()
-            document.addAuthor("Nour")
-            document.addCreator("turbo")
-
-            //font setting
-            val colorAccent=BaseColor(0,153,204,255)
-            val fontSize=20.0f
-
-            //custom font
-            val font=BaseFont.createFont("assets/fonts/brandon_medium.otf","UTF-8",BaseFont.EMBEDDED)
-            val fontArabic=BaseFont.createFont("assets/fonts/NotoNaskhArabic-Regular.ttf",BaseFont.IDENTITY_H,BaseFont.EMBEDDED)
-
-//            create title of document
-            val titleFont=Font(font,36.0f,Font.NORMAL,BaseColor.BLACK)
-            val titleFontArabic=Font(fontArabic,36.0f,Font.NORMAL,BaseColor.BLACK)
-
-            //use RXjava to fetch image and add to PDF
-            Observable.fromIterable(itemModelList)
-                .flatMap {model:ItemModel->getBitmapImage(model,document)}
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { model:ItemModel->
-                    //onNext
-                        Log.e("TAG","onNext")
-                        PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItem(document,model.itemScannedBarcode!!,Element.ALIGN_CENTER,titleFont)
-                        PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItemArabic(document,model.itemStore!!,titleFontArabic)
-                        PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItemArabic(document,model.itemCity!!,titleFontArabic)
-                        PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItemArabic(document,model.itemUOM!!,titleFontArabic)
-                        PDFUtils.addLinesSeparator(document)
-                        PDFUtils.addNewItemArabic(document,model.itemScannedQR_Code!!,titleFontArabic)
-                        PDFUtils.addLinesSeparator(document)
-
-                    },
-                    {
-                    t:Throwable? ->
-                //on Error
-                        toast(t!!.message.toString(),context)
-
-                    },{
-                //on Complet
-                PDFUtils.addLineSpace(document)
-                //close
-                document.close()
-                        toast("success",context)
-                printPDF()
-            })
-        }catch (e:FileNotFoundException){
-            e.printStackTrace()
-        }catch (e:IOException){
-            e.printStackTrace()
-        }catch (e:DocumentException){
-            e.printStackTrace()
-        }finally {
-
-        }
-    }
-
-    private fun printPDF() {
-        val printManager= requireContext().getSystemService(Context.PRINT_SERVICE) as PrintManager
-        try {
-            val printDocumentAdapter=PdfDocumentAdapter(java.lang.StringBuilder(appPath).append(
-                FILE_PRINT).toString(), FILE_PRINT)
-            printManager.print("Document",printDocumentAdapter,
-            PrintAttributes.Builder().build())
-        }catch (e:Exception)
-        {
-            e.printStackTrace()
-        }
-    }
+//    private fun printPDF() {
+//        val printManager= requireContext().getSystemService(Context.PRINT_SERVICE) as PrintManager
+//        try {
+//            val printDocumentAdapter=PdfDocumentAdapter(java.lang.StringBuilder(appPath).append(
+//                FILE_PRINT).toString(), FILE_PRINT)
+//            printManager.print("Document",printDocumentAdapter,
+//            PrintAttributes.Builder().build())
+//        }catch (e:Exception)
+//        {
+//            e.printStackTrace()
+//        }
+//    }
 
     private fun initModel(bitmap: Bitmap, barcodeNumber: String) {
         Log.e("TAG",bitmap.toString())
@@ -247,7 +246,7 @@ class GenerateBarcodeFragment : Fragment(),StateListener {
                 startActivity(intent)
                 return
             }
-            createPDFFile(StringBuilder(appPath).append(FILE_PRINT).toString())
+           // createPDFFile(StringBuilder(appPath).append(FILE_PRINT).toString())
         }
 
     }

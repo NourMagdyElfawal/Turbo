@@ -298,7 +298,6 @@ var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActi
             //deny
             Log.d("permission", "deny")
             toast("please accept the permission",context)
-            return@registerForActivityResult
         }
     }
 

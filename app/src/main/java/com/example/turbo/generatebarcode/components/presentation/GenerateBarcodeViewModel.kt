@@ -35,15 +35,15 @@ var stateListener:StateListener?=null
         }
     }
 
-    fun onPrintClick(view: View){
-        if(itemImageBarcodeBitmap!!.toString().isEmpty()){
-            stateListener!!.onFailure("error")
-            return
-
-        }else{
-
-        }
-    }
+//    fun onPrintClick(view: View){
+//        if(itemImageBarcodeBitmap!!.toString().isEmpty()){
+//            stateListener!!.onFailure("error")
+//            return
+//
+//        }else{
+//
+//        }
+//    }
 
     private fun isitemScannedBarcodeValid(itemScannedBarcode: String): Boolean {
         return itemScannedBarcode.length > 7
